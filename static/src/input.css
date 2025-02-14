@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* <!-- Download Best Quality Button -->
+        <div class="text-center">
+          <button
+            @click="downloadBestQuality()"
+            x-show="url && !loading && !downloadStarted"
+            class="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+          >
+            Download Best Quality
+          </button>
+        </div>
+
+        <!-- Deskripsi tambahan di bawah tombol Download Best Quality -->
+        <div
+          x-show="!formats.length && !loading"
+          class="mt-6 text-gray-600 text-sm"
+        >
+          <p>
+            <strong>YTMPCV </strong>is the best online tool to convert YouTube
+            videos to MP4 and MP3 formats with high quality. With YTMPCV, you
+            can easily download your favorite YouTube videos directly to your
+            device, without the need for additional software. All of these allow
+            you to choose a variety of video qualities, from 360p to 4K, and
+            provide the option to download audio in MP3 format.
+          </p>
+        </div>
+        <div
+          x-show="!formats.length && !loading"
+          class="mt-6 text-gray-600 text-sm"
+        >
+          <p>
+            <strong>YTMPCV </strong>adalah alat online terbaik untuk mengonversi
+            video YouTube ke dalam format MP4 dan MP3 dengan kualitas tinggi.
+            Dengan YTMPCV, Anda dapat dengan mudah mengunduh video YouTube
+            favorit Anda langsung ke perangkat Anda, tanpa perlu software
+            tambahan. Alat ini memungkinkan Anda memilih dari berbagai kualitas
+            video, mulai dari 360p hingga 4K, dan menyediakan opsi untuk
+            mengunduh audio dalam format MP3.
+          </p>
+        </div>
+      </div>
+    </div> */

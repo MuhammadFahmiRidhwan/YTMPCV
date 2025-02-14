@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Downloader</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/output.css') }}" />
+  <script src="{{ url_for('static', filename='js/alpine.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/stats.min.js') }}" defer></script>
+  <script src="http://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.11.0/dist/cdn.min.js"></script>
+ </head>
+ <style>
+  #particles-js {
+   position: fixed;
+   width: 100%;
+   height: 100%;
+   background-color: #5f5f5f;
+   background-image: url('');
+   background-repeat: no-repeat;
+   background-size: cover;
+   background-position: 100% 100%;
+  } /* ---- stats.js ---- */
+  .count-particles {
+   background: #000022;
+   position: absolute;
+   top: 48px;
+   left: 0;
+   width: 80px;
+   color: #13e8e9;
+   font-size: 0.8em;
+   text-align: left;
+   text-indent: 4px;
+   line-height: 14px;
+   padding-bottom: 2px;
+   font-family: Helvetica, Arial, sans-serif;
+   font-weight: bold;
+  }
+  .js-count-particles {
+   font-size: 1.1em;
+  }
+  #stats,
+  .count-particles {
+   -webkit-user-select: none; /* Safari */
+   -moz-user-select: none; /* Firefox */
+   -ms-user-select: none; /* IE */
+   user-select: none; /* Standar */
+   margin-top: 5px;
+   margin-left: 5px;
+  }
+  #stats {
+   border-radius: 3px 3px 0 0;
+   overflow: hidden;
+  }
+  .count-particles {
+   border-radius: 0 0 3px 3px;
+  }
+ </style>
+ <body class="bg-gray-100 min-h-screen flex flex-col">
+  <div id="particles-js" class="absolute top-0 left-0 w-full h-full z-0">
+   <!-- <span class="js-count-particles opacity-0">--</span> -->
+  </div>
+
+  <div
+   class="container mx-auto px-4 py-8 sm:px-6 md:px-8 lg:px-10 xl:px-12 flex-grow"
+   x-data="downloaderApp()"
+  >
+   <div
+    class="max-w-3xl mx-auto bg-gray-900/35 bg-opacity-65 backdrop-filter backdrop-blur-xs border border-gray-700 rounded-lg shadow-lg p-6 relative"
+   >
+    <!-- Header -->
+    <div class="text-center mb-8">
+     <h1 class="text-3xl font-bold text-gray-300 mb-2">YouTube Video Downloader</h1>
+     <p class="text-gray-200">Download videos in highest quality</p>
+    </div>
+
+    <!-- URL Input Form -->
+    <div
+     class="flex flex-col sm:flex-row sm:items-center sm:gap-4 w-full mb-6 text-center sm:text-left"
+    >
+     <!-- Input Field -->
+     <input
+      type="text"
+      x-init="
+      let timeout;
+      $watch('url', value => {
+        clearTimeout(timeout);
+        if (value && value.trim() !== '') {
+          timeout = setTimeout(() => getFormats(), 1000);
+        }
+      })
+    "
+      x-model="url"
+      placeholder="Paste YouTube URL here"
+      class="w-full sm:flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+     />
+
+     <!-- Button -->
+     <button
+      @click="getFormats()"
+      :disabled="!url || loading"
+      class="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4 sm:mt-0 w-auto mx-auto sm:w-auto"
+     >
+      <span x-show="!loading">Check Formats</span>
+      <span x-show="loading">Loading...</span>
+     </button>
+    </div>
+
+    <!-- Error Message -->
+    <div x-show="error" class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+     <p x-text="error"></p>
+    </div>
+
+    <!-- Formats List -->
+    <div x-show="formats.length" x-transition.duration.500ms class="mb-6">
+     <h2 class="text-xl font-semibold mb-4 text-white">Available Formats</h2>
+     <div class="grid gap-4">
+      <template x-for="format in formats" :key="format.format_id">
+       <div class="border border-gray-600 rounded-lg p-4 hover:bg-gray-700">
+        <div class="flex items-center justify-between">
+         <div class="flex flex-col sm:flex-row sm:gap-3">
+          <span class="font-medium text-white" x-text="`Resolution: ${format.resolution}`"></span>
+          <span x-show="format.format_note.includes('separate audio')" class="pb-2">
+           <svg xmlns="http://www.w3.org/2000/svg" height="27" width="27" viewBox="0 0 512 512">
+            <!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->
+            <path
+             fill="#ffffff"
+             d="M215 71.1L126.1 160H24c-13.3 0-24 10.7-24 24v144c0 13.3 10.7 24 24 24h102.1l89 89c15 15 41 4.5 41-17V88c0-21.5-26-32-41-17zM461.6 256l45.6-45.6c6.3-6.3 6.3-16.5 0-22.8l-22.8-22.8c-6.3-6.3-16.5-6.3-22.8 0L416 210.4l-45.6-45.6c-6.3-6.3-16.5-6.3-22.8 0l-22.8 22.8c-6.3 6.3-6.3 16.5 0 22.8L370.4 256l-45.6 45.6c-6.3 6.3-6.3 16.5 0 22.8l22.8 22.8c6.3 6.3 16.5 6.3 22.8 0L416 301.6l45.6 45.6c6.3 6.3 16.5 6.3 22.8 0l22.8-22.8c6.3-6.3 6.3-16.5 0-22.8L461.6 256z"
+            />
+           </svg>
+          </span>
+          <span class="text-gray-200" x-text="`Format: ${format.ext}`"></span>
+          <span class="text-gray-200" x-text="`Size: ${formatFileSize(format.filesize)}`"></span>
+         </div>
+         <div class="flex flex-col sm:flex-row sm:gap-4">
+          <!-- Preview button -->
+          <button
+           @click="previewVideo(format.format_id)"
+           :disabled="!url || loading"
+           class="px-6 py-3 my-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+           <span x-show="!loading">Preview</span>
+           <span x-show="loading">Loading...</span>
+          </button>
+          <!-- Download button -->
+          <button
+           @click="downloadVideo(format.format_id)"
+           :disabled="!url || loading"
+           class="px-4 py-3 my-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2"
+          >
+           <span x-show="!loading">Download</span>
+           <span x-show="loading">Loading...</span>
+          </button>
+         </div>
+        </div>
+       </div>
+      </template>
+     </div>
+    </div>
+   </div>
+  </div>
+  <div
+   x-data="{ 
+    privacyOpen: false, 
+    termsOpen: true,
+    contactOpen: false 
+}"
+  >
+   <!-- Footer content remains the same -->
+   <footer
+    class="w-full mx-auto bg-gray-900/35 bg-opacity-65 backdrop-filter backdrop-blur-xs border border-gray-700 text-center text-gray-200 shadow-lg p-4 relative"
+   >
+    <p>&copy;2025 YTMPCV. All rights reserved.</p>
+    <p class="mt-2 space-x-4">
+     <button @click="privacyOpen = true" class="text-blue-400 hover:text-blue-300">
+      Privacy Policy
+     </button>
+     <button @click="termsOpen = true" class="text-blue-400 hover:text-blue-300">
+      Terms of Service
+     </button>
+     <button @click="contactOpen = true" class="text-blue-400 hover:text-blue-300">
+      Contact Me
+     </button>
+    </p>
+   </footer>
+
+   <!-- Privacy Policy Modal -->
+   <template x-teleport="body">
+    <div
+     x-cloak
+     x-show="privacyOpen"
+     x-transition.opacity.duration.200ms
+     x-trap.inert.noscroll="privacyOpen"
+     x-on:keydown.esc.window="privacyOpen = false"
+     x-on:click.self="privacyOpen = false"
+     class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 backdrop-blur-sm p-4"
+    >
+     <div
+      x-show="privacyOpen"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 scale-90"
+      x-transition:enter-end="opacity-100 scale-100"
+      @click.outside="privacyOpen = false"
+      class="w-full max-w-md mx-auto max-h-[80vh] bg-gray-800 text-white rounded-lg border border-gray-700 overflow-y-auto"
+     >
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-gray-500 p-4">
+       <h3 class="font-semibold tracking-wide">Privacy Policy</h3>
+       <button @click="privacyOpen = false" aria-label="close modal">
+        <svg
+         xmlns="http://www.w3.org/2000/svg"
+         viewBox="0 0 24 24"
+         aria-hidden="true"
+         stroke="currentColor"
+         fill="none"
+         stroke-width="1.4"
+         class="w-5 h-5"
+        >
+         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+       </button>
+      </div>
+
+      <!-- Body -->
+      <div class="px-4 py-8 space-y-4">
+       <h4 class="text-lg font-semibold">Data Collection</h4>
+       <p>
+        YTMPCV collects minimal user data during video downloading process. We do not store personal
+        information or video download history.
+       </p>
+
+       <h4 class="text-lg font-semibold">Data Usage</h4>
+       <p>We use collected data solely for improving service functionality and user experience.</p>
+
+       <h4 class="text-lg font-semibold">Cookie Policy</h4>
+       <p>Our website uses essential cookies to maintain session and improve performance.</p>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end border-t border-gray-500 p-4">
+       <button
+        @click="privacyOpen = false"
+        class="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium tracking-wide text-white bg-gray-700 hover:bg-gray-600"
+       >
+        Close
+       </button>
+      </div>
+     </div>
+    </div>
+   </template>
+
+   <!-- Terms of Service Modal -->
+   <template x-teleport="body">
+    <div
+     x-cloak
+     x-show="termsOpen"
+     x-transition.opacity.duration.200ms
+     x-trap.inert.noscroll="termsOpen"
+     x-on:keydown.esc.window="termsOpen = false"
+     x-on:click.self="termsOpen = false"
+     class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 backdrop-blur-sm p-4"
+    >
+     <div
+      x-show="termsOpen"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 scale-90"
+      x-transition:enter-end="opacity-100 scale-100"
+      @click.outside="termsOpen = false"
+      class="w-full max-w-md mx-auto max-h-[80vh] bg-gray-800 text-white rounded-lg border border-gray-700 overflow-y-auto"
+     >
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-gray-500 p-4">
+       <h3 class="font-semibold tracking-wide">Terms of Service</h3>
+       <button @click="termsOpen = false" aria-label="close modal">
+        <svg
+         xmlns="http://www.w3.org/2000/svg"
+         viewBox="0 0 24 24"
+         aria-hidden="true"
+         stroke="currentColor"
+         fill="none"
+         stroke-width="1.4"
+         class="w-5 h-5"
+        >
+         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+       </button>
+      </div>
+
+      <!-- Body -->
+      <div class="px-4 py-8 space-y-4">
+       <h4 class="text-lg font-semibold">Usage Agreement</h4>
+       <p>By using YTMPCV, you agree to download videos only for personal, non-commercial use.</p>
+
+       <h4 class="text-lg font-semibold">Copyright Compliance</h4>
+       <p>
+        Users must respect copyright laws and only download content they have permission to use.
+       </p>
+
+       <h4 class="text-lg font-semibold">Service Limitations</h4>
+       <p>YTMPCV reserves the right to modify or discontinue service without prior notice.</p>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end border-t border-gray-500 p-4">
+       <button
+        @click="termsOpen = false"
+        class="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium tracking-wide text-white bg-gray-700 hover:bg-gray-600"
+       >
+        OKKK BROO FRIIDY
+       </button>
+      </div>
+     </div>
+    </div>
+   </template>
+   <!-- Contact Modal -->
+   <template x-teleport="body">
+    <div
+     x-cloak
+     x-show="contactOpen"
+     x-transition.opacity.duration.200ms
+     x-trap.inert.noscroll="contactOpen"
+     x-on:keydown.esc.window="contactOpen = false"
+     x-on:click.self="contactOpen = false"
+     class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 backdrop-blur-sm p-4"
+    >
+     <div
+      x-show="contactOpen"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 scale-90"
+      x-transition:enter-end="opacity-100 scale-100"
+      @click.outside="contactOpen = false"
+      class="w-full max-w-md mx-auto max-h-[80vh] bg-gray-800 text-white rounded-lg border border-gray-700 overflow-y-auto"
+     >
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-gray-500 p-4">
+       <h3 class="font-semibold tracking-wide">Contact Me</h3>
+       <button @click="contactOpen = false" aria-label="close modal">
+        <svg
+         xmlns="http://www.w3.org/2000/svg"
+         viewBox="0 0 24 24"
+         aria-hidden="true"
+         stroke="currentColor"
+         fill="none"
+         stroke-width="1.4"
+         class="w-5 h-5"
+        >
+         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+       </button>
+      </div>
+
+      <!-- Body -->
+      <div class="px-4 py-8 space-y-4">
+       <div class="mb-4">
+        <h4 class="text-lg font-semibold mb-2">Email</h4>
+        <p class="text-gray-300">support@YTMPCV.com</p>
+       </div>
+
+       <div class="mb-4">
+        <h4 class="text-lg font-semibold mb-2">Social Media</h4>
+        <div class="flex space-x-4 justify-center items-center">
+         <a href="#" target="_blank" class="text-gray-300 hover:text-white transition-colors">
+          <svg
+           xmlns="http://www.w3.org/2000/svg"
+           width="24"
+           height="24"
+           viewBox="0 0 24 24"
+           fill="currentColor"
+           stroke="none"
+          >
+           <path
+            d="M12 2C6.477 2 2 6.486 2 12c0 4.418 2.865 8.167 6.839 9.49.5.092.682-.217.682-.483 0-.237-.009-.866-.014-1.699-2.782.603-3.369-1.34-3.369-1.34-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.607.069-.607 1.003.07 1.531 1.032 1.531 1.032.892 1.529 2.341 1.088 2.91.832.091-.647.349-1.088.635-1.34-2.22-.252-4.555-1.113-4.555-4.95 0-1.093.39-1.988 1.031-2.689-.103-.253-.447-1.27.098-2.645 0 0 .84-.269 2.75 1.026A9.564 9.564 0 0 1 12 6.81c.851.004 1.706.115 2.505.337 1.909-1.295 2.748-1.026 2.748-1.026.546 1.375.202 2.392.1 2.645.643.701 1.03 1.596 1.03 2.689 0 3.848-2.339 4.695-4.565 4.943.358.309.678.92.678 1.855 0 1.338-.012 2.42-.012 2.747 0 .268.18.579.688.481C19.138 20.164 22 16.418 22 12c0-5.514-4.477-10-10-10z"
+           />
+          </svg>
+         </a>
+
+         <a href="#" target="_blank" class="text-gray-300 hover:text-white transition-colors">
+          <svg
+           xmlns="http://www.w3.org/2000/svg"
+           width="24"
+           height="24"
+           viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="2"
+           stroke-linecap="round"
+           stroke-linejoin="round"
+          >
+           <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+           <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+           <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+          </svg>
+         </a>
+         <a href="#" target="_blank" class="text-gray-300 hover:text-white transition-colors">
+          <svg
+           xmlns="http://www.w3.org/2000/svg"
+           width="24"
+           height="24"
+           viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="2"
+           stroke-linecap="round"
+           stroke-linejoin="round"
+          >
+           <path
+            d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"
+           />
+           <rect x="2" y="9" width="4" height="12" />
+           <circle cx="4" cy="4" r="2" />
+          </svg>
+         </a>
+        </div>
+       </div>
+
+       <div>
+        <h4 class="text-lg font-semibold mb-2">Additional Contact</h4>
+        <p class="text-gray-300">
+         For further inquiries, please send an email to the address above.
+        </p>
+       </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end border-t border-gray-500 p-4">
+       <button
+        @click="contactOpen = false"
+        class="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium tracking-wide text-white bg-gray-700 hover:bg-gray-600"
+       >
+        Tutup
+       </button>
+      </div>
+     </div>
+    </div>
+   </template>
+  </div>
+  <script>
+   document.addEventListener('alpine:init', () => {
+    Alpine.data('downloaderApp', () => ({
+     url: '',
+     formats: [],
+     loading: false,
+     error: null,
+     success: false,
+     downloadStarted: false,
+
+     formatFileSize(bytes) {
+      if (bytes === 'unknown') return 'Unknown'
+      bytes = parseInt(bytes)
+      if (isNaN(bytes)) return 'Unknown'
+
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+      if (bytes === 0) return '0 Byte'
+      const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)))
+      return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i]
+     },
+
+     async previewVideo(formatId = null) {
+      this.error = null
+      this.loading = true
+
+      try {
+       Swal.fire({
+        title: 'Wait a minute',
+        text: 'We are fetching preview',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+       })
+
+       const response = await fetch('/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: this.url, format: formatId })
+       })
+
+       if (!response.ok) throw new Error('Preview failed')
+
+       const data = await response.json()
+
+       this.openPreviewTab(data.title, data.stream_url, data.format?.format_note)
+       Swal.close()
+      } catch (err) {
+       console.error('Preview error:', err)
+       this.error = 'Failed to preview video. Please try again.'
+       Swal.fire({ title: 'Error', text: this.error, icon: 'error' })
+      } finally {
+       this.loading = false
+      }
+     },
+
+     openPreviewTab(title, url, formatNote) {
+      if (!url) {
+       console.error('Stream URL tidak ditemukan!')
+       Swal.fire({ title: 'Error', text: 'Stream URL tidak ditemukan!', icon: 'error' })
+       return
+      }
+
+      const previewWindow = window.open(url, '_blank')
+      if (!previewWindow) {
+       console.error('Gagal membuka window preview.')
+       Swal.fire({ title: 'Error', text: 'Gagal membuka preview.', icon: 'error' })
+      }
+     },
+
+     async getFormats() {
+      if (!this.url) return
+      this.loading = true
+      this.error = null
+      this.formats = []
+      try {
+       Swal.fire({
+        title: 'Wait a minute',
+        text: 'We are fetching video formats',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+       })
+
+       const response = await fetch('/get-formats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: this.url })
+       })
+
+       const data = await response.json()
+
+       if (!response.ok || data.error) {
+        throw new Error(data.error || `HTTP error! status: ${response.status}`)
+       }
+       this.formats = data
+       Swal.close()
+      } catch (err) {
+       Swal.fire({ title: 'Error', text: err.message, icon: 'error' })
+      } finally {
+       this.loading = false
+      }
+     },
+
+     async downloadVideo(formatId = null) {
+      this.downloadStarted = true
+      this.error = null
+
+      try {
+       Swal.fire({
+        title: 'Downloading...',
+        text: 'Please wait while we prepare your download.',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+       })
+
+       const response = await fetch('/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: this.url, format: formatId })
+       })
+
+       if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Download failed')
+       }
+
+       const data = await response.json()
+
+       // Buat request baru ke endpoint serve-file
+       const fileResponse = await fetch(data.download_url)
+       if (!fileResponse.ok) throw new Error('Failed to fetch file')
+
+       const blob = await fileResponse.blob()
+       const url = window.URL.createObjectURL(blob)
+       const a = document.createElement('a')
+       a.href = url
+       a.download = data.file_name // Gunakan nama file dari server
+       document.body.appendChild(a)
+       a.click()
+       document.body.removeChild(a)
+       window.URL.revokeObjectURL(url)
+
+       Swal.close()
+       Swal.fire({
+        title: 'Download Complete!',
+        text: 'Your file has been downloaded successfully.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+       })
+
+       this.success = true
+      } catch (err) {
+       Swal.fire({
+        title: 'Error',
+        text: err.message || 'Failed to download file. Please try again.',
+        icon: 'error'
+       })
+       this.error = err.message || 'Failed to download file. Please try again.'
+      } finally {
+       this.downloadStarted = false
+      }
+     },
+     downloadBestQuality() {
+      this.downloadVideo()
+     }
+    }))
+   })
+  </script>
+
+  <script>
+   particlesJS('particles-js', {
+    particles: {
+     number: {
+      value: 150,
+      density: {
+       enable: true,
+       value_area: 800
+      }
+     },
+     color: { value: '#FFFFFF' },
+     shape: {
+      type: 'circle',
+      stroke: {
+       width: 1,
+       color: '#FFFFFF'
+      },
+      polygon: { nb_sides: 5 },
+      image: {
+       src: 'img/github.svg',
+       width: 100,
+       height: 100
+      }
+     },
+     opacity: {
+      value: 1,
+      random: false,
+      anim: {
+       enable: false,
+       speed: 1,
+       opacity_min: 0.1,
+       sync: false
+      }
+     },
+     size: {
+      value: 2.5,
+      random: true,
+      anim: {
+       enable: false,
+       speed: 40,
+       size_min: 0.1,
+       sync: false
+      }
+     },
+     line_linked: {
+      enable: true,
+      distance: 115,
+      color: '#000000',
+      opacity: 1,
+      width: 1.4
+     },
+     move: {
+      enable: true,
+      speed: 3,
+      direction: 'none',
+      random: true,
+      straight: false,
+      out_mode: 'out',
+      bounce: false,
+      attract: {
+       enable: false,
+       rotateX: 1200,
+       rotateY: 1200
+      }
+     }
+    },
+    interactivity: {
+     detect_on: 'canvas',
+     events: {
+      onhover: {
+       enable: false,
+       mode: 'grab'
+      },
+      onclick: {
+       enable: true,
+       mode: 'push'
+      },
+      resize: true
+     },
+     modes: {
+      grab: {
+       distance: 400,
+       line_linked: { opacity: 1 }
+      },
+      bubble: {
+       distance: 400,
+       size: 40,
+       duration: 2,
+       opacity: 8,
+       speed: 3
+      },
+      repulse: {
+       distance: 200,
+       duration: 0.4
+      },
+      push: {
+       particles_nb: 4
+      },
+      remove: {
+       particles_nb: 2
+      }
+     }
+    },
+    retina_detect: true
+   })
+
+   // Update particle count
+   // var count_particles = document.querySelector(".js-count-particles");
+
+   // function updateParticleCount() {
+   //   const particleCount = window.pJSDom[0].pJS.particles.array.length;
+   //   count_particles.innerText = particleCount;
+   // }
+
+   // Fungsi untuk mengurangi partikel secara halus
+   function reduceParticles() {
+    const pJS = window.pJSDom[0].pJS
+    const particles = pJS.particles.array
+
+    if (particles.length > 90) {
+     // Pilih 2 partikel random untuk dihapus
+     for (let i = 0; i < 2; i++) {
+      if (particles.length > 90) {
+       const randomIndex = Math.floor(Math.random() * particles.length)
+       // Secara bertahap kurangi opacity dan ukuran partikel
+       const particle = particles[randomIndex]
+
+       // Animasi pengurangan opacity dan ukuran
+       let opacity = particle.opacity
+       let size = particle.radius
+
+       const fadeInterval = setInterval(() => {
+        opacity -= 0.1
+        size -= 0.2
+
+        if (opacity <= 0 || size <= 0) {
+         clearInterval(fadeInterval)
+         // Hapus partikel setelah fade out
+         particles.splice(randomIndex, 1)
+        } else {
+         particle.opacity = opacity
+         particle.radius = size
+        }
+       }, 50)
+      }
+     }
+    }
+   }
+
+   // Update counter setiap 100ms
+   // setInterval(updateParticleCount, 100);
+
+   // Kurangi 2 partikel setiap 3 detik
+   setInterval(reduceParticles, 600)
+  </script>
+ </body>
+</html>
