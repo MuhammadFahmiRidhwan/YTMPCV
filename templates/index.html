@@ -5,11 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube Downloader</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/output.css') }}" />
+  <script src="{{ url_for('static', filename='js/particles.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/alpine.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='js/stats.min.js') }}" defer></script>
-  <script src="http://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script src="{{ url_for('static', filename='js/stats.min.js') }}"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.11.0/dist/cdn.min.js"></script>
  </head>
  <style>
@@ -108,10 +107,10 @@
      </button>
     </div>
 
-    <!-- Error Message -->
+    <!-- Error Message 
     <div x-show="error" class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
      <p x-text="error"></p>
-    </div>
+    </div> -->
 
     <!-- Formats List -->
     <div x-show="formats.length" x-transition.duration.500ms class="mb-6">
@@ -164,8 +163,9 @@
   <div
    x-data="{ 
     privacyOpen: false, 
-    termsOpen: true,
-    contactOpen: false 
+    termsOpen: false,
+    contactOpen: false,
+    protipOpen: true 
 }"
   >
    <!-- Footer content remains the same -->
@@ -183,6 +183,7 @@
      <button @click="contactOpen = true" class="text-blue-400 hover:text-blue-300">
       Contact Me
      </button>
+     <button @click="protipOpen = true" class="text-blue-400 hover:text-blue-300">PRO TIPS</button>
     </p>
    </footer>
 
@@ -435,6 +436,107 @@
      </div>
     </div>
    </template>
+   <!-- PRO TIP Modal -->
+   <template x-teleport="body">
+    <div
+     x-cloak
+     x-show="protipOpen"
+     x-transition.opacity.duration.200ms
+     x-trap.inert.noscroll="protipOpen"
+     x-on:keydown.esc.window="protipOpen = false"
+     x-on:click.self="protipOpen = false"
+     class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 backdrop-blur-sm p-4"
+    >
+     <div
+      x-show="protipOpen"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 scale-90"
+      x-transition:enter-end="opacity-100 scale-100"
+      @click.outside="protipOpen = false"
+      class="w-full max-w-md mx-auto max-h-[80vh] bg-gray-800 text-white rounded-lg border border-gray-700 overflow-y-auto"
+     >
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-gray-500 p-4">
+       <h3 class="font-semibold tracking-wide">PRO TIPS</h3>
+       <button @click="protipOpen = false" aria-label="close modal">
+        <svg
+         xmlns="http://www.w3.org/2000/svg"
+         viewBox="0 0 24 24"
+         aria-hidden="true"
+         stroke="currentColor"
+         fill="none"
+         stroke-width="1.4"
+         class="w-5 h-5"
+        >
+         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+       </button>
+      </div>
+
+      <!-- Body -->
+      <div class="px-4 py-8 space-y-4">
+       <div class="mb-4">
+        <h4 class="text-lg font-semibold mb-2">Follow these tips if your download fails</h4>
+        <p>
+         If the download fails, use <strong>PREVIEW</strong> instead of download and click the three
+         dots icon at the right of the volume button for <strong>.mp3</strong>, and at the right of
+         the Expand button for <strong>.mp4</strong>.
+        </p>
+       </div>
+       <div class="mb-4">
+        <h4 class="text-lg font-semibold mb-2">Description</h4>
+        <div class="flex items-center mt-2">
+         <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="currentColor"
+          class="bi bi-three-dots-vertical"
+          viewBox="0 0 16 16"
+         >
+          <path
+           d="M8 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"
+          />
+         </svg>
+         <span class="ml-2">Three dots icon for the respective buttons</span>
+        </div>
+
+        <!-- Maximize Button -->
+        <div class="flex items-center mt-2">
+         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="16" height="16">
+          <path
+           fill="#ffffff"
+           d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"
+          />
+         </svg>
+         <span class="ml-2">Expand button icon</span>
+        </div>
+
+        <!-- Speaker Icon -->
+        <div class="flex items-center mt-2">
+         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" width="16" height="16">
+          <path
+           fill="#ffffff"
+           d="M533.6 32.5C598.5 85.2 640 165.8 640 256s-41.5 170.7-106.4 223.5c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C557.5 398.2 592 331.2 592 256s-34.5-142.2-88.7-186.3c-10.3-8.4-11.8-23.5-3.5-33.8s23.5-11.8 33.8-3.5zM473.1 107c43.2 35.2 70.9 88.9 70.9 149s-27.7 113.8-70.9 149c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C475.3 341.3 496 301.1 496 256s-20.7-85.3-53.2-111.8c-10.3-8.4-11.8-23.5-3.5-33.8s23.5-11.8 33.8-3.5zm-60.5 74.5C434.1 199.1 448 225.9 448 256s-13.9 56.9-35.4 74.5c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C393.1 284.4 400 271 400 256s-6.9-28.4-17.7-37.3c-10.3-8.4-11.8-23.5-3.5-33.8s23.5-11.8 33.8-3.5zM301.1 34.8C312.6 40 320 51.4 320 64l0 384c0 12.6-7.4 24-18.9 29.2s-25 3.1-34.4-5.3L131.8 352 64 352c-35.3 0-64-28.7-64-64l0-64c0-35.3 28.7-64 64-64l67.8 0L266.7 40.1c9.4-8.4 22.9-10.4 34.4-5.3z"
+          />
+         </svg>
+         <span class="ml-2">Volume button icon</span>
+        </div>
+       </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end border-t border-gray-500 p-4">
+       <button
+        @click="protipOpen = false"
+        class="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium tracking-wide text-white bg-gray-700 hover:bg-gray-600"
+       >
+        Close
+       </button>
+      </div>
+     </div>
+    </div>
+   </template>
   </div>
   <script>
    document.addEventListener('alpine:init', () => {
@@ -606,12 +708,11 @@
     }))
    })
   </script>
-
   <script>
    particlesJS('particles-js', {
     particles: {
      number: {
-      value: 150,
+      value: 130,
       density: {
        enable: true,
        value_area: 800
