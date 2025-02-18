@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube Downloader</title>
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/YTMPCV.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/output.css') }}" />
   <script src="{{ url_for('static', filename='js/particles.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/alpine.js') }}" defer></script>
@@ -644,7 +646,6 @@
      async downloadVideo(formatId = null) {
       this.downloadStarted = true
       this.error = null
-
       try {
        Swal.fire({
         title: 'Downloading...',
@@ -667,28 +668,20 @@
 
        const data = await response.json()
 
-       // Buat request baru ke endpoint serve-file
-       const fileResponse = await fetch(data.download_url)
-       if (!fileResponse.ok) throw new Error('Failed to fetch file')
+       // Langsung trigger download melalui window.location
+       window.location.href = data.download_url
 
-       const blob = await fileResponse.blob()
-       const url = window.URL.createObjectURL(blob)
-       const a = document.createElement('a')
-       a.href = url
-       a.download = data.file_name // Gunakan nama file dari server
-       document.body.appendChild(a)
-       a.click()
-       document.body.removeChild(a)
-       window.URL.revokeObjectURL(url)
-
-       Swal.close()
-       Swal.fire({
-        title: 'Download Complete!',
-        text: 'Your file has been downloaded successfully.',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-       })
+       // Tunggu sebentar sebelum menampilkan success message
+       setTimeout(() => {
+        Swal.close()
+        Swal.fire({
+         title: 'Download Started!',
+         text: 'Your download has started automatically.',
+         icon: 'success',
+         timer: 2000,
+         showConfirmButton: false
+        })
+       }, 1000)
 
        this.success = true
       } catch (err) {
